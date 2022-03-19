@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apping</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main>
+        <div class="container">
+            <form action="" class="form">
+                <h1 class="form-title"></h1>
+                <select name="select" class="select-css">
+                    <option value="marcas" disabled selected>Marcas</option>
+                </select>
+                <button type="submit" id="btn-submit">Enviar</button>
+            </form>
+        </div>
+    </main>
+<script>
+const form = document.querySelector('.form');
+const select = document.querySelector('.select-css');
+const titleTag = document.querySelector('.form-title');
+let options = [];
+
+    const dataPais = async(id)=>{
+        const peticion = await fetch(`https://api.garantto.com/api/v1/categoria?idPais=${id}`);
+        const data = await peticion.json();
+        let productos = [];
+        data.forEach(el=>{
+            let producto = el.Hijos.filter(producto=>producto.IdT === 'Televisor' || producto.IdT === 'Carro');
+            if(producto.length > 0){
+                producto.categoria = el.Descripcion; //Agrego la propiedad categoria al producto
+                console.log(`Categoria de ${producto[0].IdT}: `,el.Descripcion) // consola Categoria del producto
+                productos.push(producto);
+            } 
+        })
+        console.log('PRODUCTOS',productos)
+    }
+
+                  fetch('https://api.garantto.com/api/v1/pais')
+                  .then(res=> res.json())
+                  .then(res=>{ 
+                      let registro;
+                      // Buscar pais cuyo IdT === CO
+                      registro = res.find(item=>item.IdT === 'CO');
+
+                        if(registro === undefined ){
+                            titleTag.textContent = `No se ah encontrado el registro`;
+                        }else{
+                            dataPais(registro.Id);
+                            titleTag.textContent = `${registro.Id}. ${registro.Pais} (${registro.IdT})`;
+                        }
+                   })// Primer paso
+                   .catch(err=> new Error(err)); //captura de eror en la peticion
+
+                    // mostrar ciudades asociadas a la marca
+                    const compareOption = (option)=>{
+                        option = Number(option);
+                        let res = options.filter(item=> item.Id === option);
+                        alert(`Hay ${res[0].IdCiudades.length} ciudades asociadas a esta marca`);
+                    }
+
+    // Rellenar opciones al input SELECT
+    const getMarcas = async()=>{
+        const peticion = await fetch('https://api.garantto.com/api/v1/marca-cbx');
+        options = await peticion.json();
+        options.forEach(item=>{
+            let option = document.createElement('option');
+            option.textContent = item.Id;
+            select.appendChild(option);
+        });
+
+        form.addEventListener('submit',(e)=>{
+            e.preventDefault();
+            let option = form.select.value;
+            if(option === 'marcas'){
+                alert('Por favor elige una opcion');
+                return false;
+            }
+            compareOption(option);
+        })
+    }
+    getMarcas();
+</script>
+</body>
+</html>
